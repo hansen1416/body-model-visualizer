@@ -1,8 +1,17 @@
 import os
+import joblib
 
 import torch
 import open3d as o3d
 from smplx import SMPL, SMPLX, MANO, FLAME
+
+# wham_result = joblib.load(os.path.join("data", "WHAM", "slam_results.pth"))
+wham_result = joblib.load(os.path.join("data", "WHAM", "tracking_results.pth"))
+
+print(wham_result)
+
+exit()
+
 
 SMPL_PATH = os.path.join("data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
 
