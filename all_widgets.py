@@ -125,27 +125,27 @@ class ExampleWindow:
         collapse.add_child(switch)
 
         self.logo_idx = 0
-        # proxy = gui.WidgetProxy()
+        proxy = gui.WidgetProxy()
 
-        # def switch_proxy():
-        #     self.logo_idx += 1
-        #     if self.logo_idx % 3 == 0:
-        #         proxy.set_widget(None)
-        #     elif self.logo_idx % 3 == 1:
-        #         # Add a simple image
-        #         logo = gui.ImageWidget(basedir + "/icon-32.png")
-        #         proxy.set_widget(logo)
-        #     else:
-        #         label = gui.Label("Open3D: A Modern Library for 3D Data Processing")
-        #         proxy.set_widget(label)
-        #     w.set_needs_layout()
+        def switch_proxy():
+            self.logo_idx += 1
+            if self.logo_idx % 3 == 0:
+                proxy.set_widget(None)
+            elif self.logo_idx % 3 == 1:
+                # Add a simple image
+                logo = gui.ImageWidget(basedir + "/icon-32.png")
+                proxy.set_widget(logo)
+            else:
+                label = gui.Label("Open3D: A Modern Library for 3D Data Processing")
+                proxy.set_widget(label)
+            w.set_needs_layout()
 
-        # logo_btn = gui.Button("Switch Logo By WidgetProxy")
-        # logo_btn.vertical_padding_em = 0
-        # logo_btn.background_color = gui.Color(r=0, b=0.5, g=0)
-        # logo_btn.set_on_clicked(switch_proxy)
-        # collapse.add_child(logo_btn)
-        # collapse.add_child(proxy)
+        logo_btn = gui.Button("Switch Logo By WidgetProxy")
+        logo_btn.vertical_padding_em = 0
+        logo_btn.background_color = gui.Color(r=0, b=0.5, g=0)
+        logo_btn.set_on_clicked(switch_proxy)
+        collapse.add_child(logo_btn)
+        collapse.add_child(proxy)
 
         # Widget stack demo
         self._widget_idx = 0
@@ -276,22 +276,22 @@ class ExampleWindow:
         tab2.add_child(gui.Label("No plugins detected"))
         tab2.add_stretch()
         tabs.add_tab("Plugins", tab2)
-        # tab3 = gui.RadioButton(gui.RadioButton.VERT)
-        # tab3.set_items(["Apple", "Orange"])
+        tab3 = gui.RadioButton(gui.RadioButton.VERT)
+        tab3.set_items(["Apple", "Orange"])
 
-        # def vt_changed(idx):
-        #     print(f"current cargo: {tab3.selected_value}")
+        def vt_changed(idx):
+            print(f"current cargo: {tab3.selected_value}")
 
-        # tab3.set_on_selection_changed(vt_changed)
-        # tabs.add_tab("Cargo", tab3)
-        # tab4 = gui.RadioButton(gui.RadioButton.HORIZ)
-        # tab4.set_items(["Air plane", "Train", "Bus"])
+        tab3.set_on_selection_changed(vt_changed)
+        tabs.add_tab("Cargo", tab3)
+        tab4 = gui.RadioButton(gui.RadioButton.HORIZ)
+        tab4.set_items(["Air plane", "Train", "Bus"])
 
-        # def hz_changed(idx):
-        #     print(f"current traffic plan: {tab4.selected_value}")
+        def hz_changed(idx):
+            print(f"current traffic plan: {tab4.selected_value}")
 
-        # tab4.set_on_selection_changed(hz_changed)
-        # tabs.add_tab("Traffic", tab4)
+        tab4.set_on_selection_changed(hz_changed)
+        tabs.add_tab("Traffic", tab4)
         collapse.add_child(tabs)
 
         # Quit button. (Typically this is a menu item)
