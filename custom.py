@@ -14,9 +14,13 @@ pose = wham_result[0]["pose"]
 beta = wham_result[0]["betas"]
 verts = wham_result[0]["verts"]
 
-print(pose.shape)
-print(beta.shape)
-print(verts.shape)
+# print(pose.shape)
+# print(beta.shape)
+# print(verts.shape)
+
+# verts[:, :, 0] *= -1
+verts[:, :, 1] *= -1
+verts[:, :, 2] *= -1
 
 
 SMPL_PATH = os.path.join("data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
@@ -74,7 +78,7 @@ for i in range(len(verts)):  # Number of frames
     frame_idx += 1
 
     # Control the speed of the animation
-    time.sleep(0.1)
+    time.sleep(0.016)
 
 # Close the visualizer
 vis.destroy_window()
