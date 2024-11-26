@@ -2,10 +2,33 @@ import os
 import joblib
 import time
 
+import boto3
 import numpy as np
 import torch
 import open3d as o3d
 from smplx import SMPL, SMPLX, MANO, FLAME
+
+
+class WHAMPlayer:
+
+    def __init__(self):
+
+        video_name = ""
+
+        output_path = os.path.join(
+            os.expanduser("~"),
+            "Downloads",
+            "tram-results",
+            video_name,
+            "wham_output.pkl",
+        )
+        video_path = os.path.join(
+            os.expanduser("~"),
+            "Downloads",
+            "tram-results",
+            f"{video_name}.mp4",
+        )
+
 
 # wham_result = joblib.load(os.path.join("data", "WHAM", "slam_results.pth"))
 wham_result = joblib.load(os.path.join("data", "WHAM", "wham_output.pkl"))
