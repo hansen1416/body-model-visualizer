@@ -96,4 +96,3 @@ if __name__ == "__main__":
 
     player = WHAMPlayer()
     player.play()
-    player.close()
