@@ -40,9 +40,6 @@ class WHAMPlayer:
             os.path.join("data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
         )
 
-        self.smpl_frame = 0
-        self.total_frame = len(self.verts)
-
         video_path = os.path.join(
             os.path.expanduser("~"),
             "Downloads",
@@ -54,6 +51,10 @@ class WHAMPlayer:
 
         if not self.cap.isOpened():
             raise ValueError(f"Cannot open video file: {video_path}")
+
+        fps = self.cap.get(cv2.CAP_PROP_FPS)
+
+        self.step = 1 / fps
 
     def load_smpl_mesh(self, verts, faces):
 
@@ -68,27 +69,47 @@ class WHAMPlayer:
 
     def play(self):
 
+        frame_idx = 0
+
         faces = self.smpl_model.faces
 
-        mesh = self.load_smpl_mesh(self.verts[self.smpl_frame], faces)
+        mesh = self.load_smpl_mesh(self.verts[frame_idx], faces)
 
         self.vis.add_geometry(mesh)
 
+        # image_geometry = None
+
         while True:
 
-            mesh.vertices = o3d.utility.Vector3dVector(self.verts[self.smpl_frame])
+            # ret, frame = self.cap.read()
 
+            # if not ret:
+            #     print("End of video or cannot read the frame.")
+            #     break
+
+            # # Convert the frame from BGR to RGB
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # # Create an Open3D image from the frame
+            # image_geometry = o3d.geometry.Image(frame)
+
+            # # only remove image_geometry from self.vis
+            # # self.vis.remove_geometry(image_geometry)
+            # self.vis.clear_geometries()
+            # self.vis.add_geometry(image_geometry)
+            # self.vis.update_geometry(image_geometry)
+
+            mesh.vertices = o3d.utility.Vector3dVector(self.verts[frame_idx])
+            # self.vis.add_geometry(mesh)
             self.vis.update_geometry(mesh)
+
             self.vis.poll_events()
             self.vis.update_renderer()
 
-            self.smpl_frame += 1
+            frame_idx += 1
 
-            if self.smpl_frame >= self.total_frame:
-                break
+            time.sleep(self.step)
 
-            time.sleep(0.016)
-
+        self.cap.release()
         self.vis.destroy_window()  # Close the visualizer
 
 
