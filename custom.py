@@ -52,7 +52,13 @@ class WHAMPlayer:
         if not self.cap.isOpened():
             raise ValueError(f"Cannot open video file: {video_path}")
 
+        self.total_frame_count = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        assert self.total_frame_count == len(self.verts), "Frame count mismatch"
+
         fps = self.cap.get(cv2.CAP_PROP_FPS)
+
+        self.cap.release()
 
         self.step = 1 / fps
 
@@ -79,13 +85,7 @@ class WHAMPlayer:
 
         # image_geometry = None
 
-        while True:
-
-            # ret, frame = self.cap.read()
-
-            # if not ret:
-            #     print("End of video or cannot read the frame.")
-            #     break
+        while frame_idx < self.total_frame_count:
 
             # # Convert the frame from BGR to RGB
             # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -109,7 +109,6 @@ class WHAMPlayer:
 
             time.sleep(self.step)
 
-        self.cap.release()
         self.vis.destroy_window()  # Close the visualizer
 
 
