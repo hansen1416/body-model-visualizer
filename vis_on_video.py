@@ -140,6 +140,8 @@ if __name__ == "__main__":
         if not os.path.exists(wham_result_path):
             print(f"WHAM result not found for {video_file}")
             continue
+            # WHAM result not found for Top 10 Intense Bodyweight Cardio.mp4
+            # WHAM result not found for 🔥 300 Rep Bodyweight HIIT Workout.mp4
 
         output_path = os.path.join(
             os.path.expanduser("~"),
