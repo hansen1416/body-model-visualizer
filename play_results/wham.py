@@ -37,7 +37,7 @@ class WHAMPlayer:
         self.vis.create_window()
 
         self.smpl_model = SMPL(
-            os.path.join("data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
+            os.path.join("..", "data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
         )
 
         video_path = os.path.join(

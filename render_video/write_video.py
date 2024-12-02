@@ -151,7 +151,7 @@ if __name__ == "__main__":
         )
 
         smpl_model = SMPL(
-            os.path.join("data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
+            os.path.join("..", "data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
         )
 
         wham_result = joblib.load(wham_result_path)
