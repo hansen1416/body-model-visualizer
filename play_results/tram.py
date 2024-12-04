@@ -1,98 +1,42 @@
 import os
-import joblib
-import time
 
-import cv2
 import numpy as np
-import open3d as o3d
-from smplx import SMPL, SMPLX, MANO, FLAME
+from smplx import SMPL
+
+from base_player import BasePlayer
 
 
-class TramPlayer:
+class TramPlayer(BasePlayer):
 
     def __init__(self, tram_result_path, video_path):
 
-        tram_result = np.load(tram_result_path, allow_pickle=True)
+        super(TramPlayer, self).__init__(tram_result_path, video_path)
 
-        # pose = wham_result[0]["pose"]
-        # beta = wham_result[0]["betas"]
-        print(tram_result)
+    def load_result(self, result_path) -> np.ndarray:
+        # dict_keys(['pred_cam', 'pred_pose', 'pred_shape', 'pred_rotmat', 'pred_trans', 'frame'])
+        tram_result = np.load(result_path, allow_pickle=True).item()
 
-        self.vis = o3d.visualization.Visualizer()
-        self.vis.create_window()
+        pred_rotmat = tram_result["pred_rotmat"]
+        pred_shape = tram_result["pred_shape"]
+        pred_trans = tram_result["pred_trans"]
 
-        # get abs path of current file
-        abs_path = os.path.dirname(os.path.abspath(__file__))
+        # smpl = SMPL()
 
-        self.smpl_model = SMPL(
-            os.path.join(
-                abs_path, "..", "data", "body_models", "smpl", "SMPL_NEUTRAL.pkl"
-            )
+        pred = self.smpl_model(
+            body_pose=pred_rotmat[:, 1:],
+            global_orient=pred_rotmat[:, [0]],
+            betas=pred_shape,
+            transl=pred_trans.squeeze(),
+            pose2rot=False,
+            default_smpl=True,
         )
 
-        self.cap = cv2.VideoCapture(video_path)
+        vertices = pred.vertices
 
-        if not self.cap.isOpened():
-            raise ValueError(f"Cannot open video file: {video_path}")
+        vertices[:, :, 1] *= -1
+        vertices[:, :, 2] *= -1
 
-        self.total_frame_count = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-        assert self.total_frame_count == len(self.verts), "Frame count mismatch"
-
-        fps = self.cap.get(cv2.CAP_PROP_FPS)
-
-        self.cap.release()
-
-        self.step = 1 / fps
-
-    def load_smpl_mesh(self, verts, faces):
-
-        mesh = o3d.geometry.TriangleMesh()
-
-        mesh.vertices = o3d.utility.Vector3dVector(verts)
-        mesh.triangles = o3d.utility.Vector3iVector(faces)
-        mesh.compute_vertex_normals()
-        mesh.paint_uniform_color([0.5, 0.5, 0.5])
-
-        return mesh
-
-    def play(self):
-
-        frame_idx = 0
-
-        faces = self.smpl_model.faces
-
-        mesh = self.load_smpl_mesh(self.verts[frame_idx], faces)
-
-        self.vis.add_geometry(mesh)
-
-        # image_geometry = None
-
-        while frame_idx < self.total_frame_count:
-
-            # # Convert the frame from BGR to RGB
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # # Create an Open3D image from the frame
-            # image_geometry = o3d.geometry.Image(frame)
-
-            # # only remove image_geometry from self.vis
-            # # self.vis.remove_geometry(image_geometry)
-            # self.vis.clear_geometries()
-            # self.vis.add_geometry(image_geometry)
-            # self.vis.update_geometry(image_geometry)
-
-            mesh.vertices = o3d.utility.Vector3dVector(self.verts[frame_idx])
-            # self.vis.add_geometry(mesh)
-            self.vis.update_geometry(mesh)
-
-            self.vis.poll_events()
-            self.vis.update_renderer()
-
-            frame_idx += 1
-
-            time.sleep(self.step)
-
-        self.vis.destroy_window()  # Close the visualizer
+        return vertices
 
 
 if __name__ == "__main__":
@@ -114,5 +58,6 @@ if __name__ == "__main__":
         )
 
         player = TramPlayer(tram_result_path, video_path)
+        player.play()
 
         break
