@@ -3,7 +3,6 @@ import joblib
 import time
 
 import cv2
-import boto3
 import numpy as np
 import torch
 import open3d as o3d
@@ -13,8 +12,6 @@ from smplx import SMPL, SMPLX, MANO, FLAME
 class WHAMPlayer:
 
     def __init__(self, wham_result_path, video_path):
-
-        video_name = "5 Dumbbell HIIT exercises you need to add!"
 
         wham_result = joblib.load(wham_result_path)
 
@@ -100,29 +97,3 @@ class WHAMPlayer:
             time.sleep(self.step)
 
         self.vis.destroy_window()  # Close the visualizer
-
-
-if __name__ == "__main__":
-
-    results_folder = os.path.join(os.path.expanduser("~"), "Downloads", "wham-results")
-    # iterate over results folder
-
-    for video_name in os.listdir(results_folder):
-
-        tram_result_path = os.path.join(
-            results_folder,
-            video_name,
-            "wham_output.pkl",
-        )
-
-        video_path = os.path.join(
-            os.path.expanduser("~"),
-            "Downloads",
-            "videos",
-            f"{video_name}.mp4",
-        )
-
-        player = WHAMPlayer()
-        player.play()
-
-        break
