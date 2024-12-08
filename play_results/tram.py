@@ -20,7 +20,12 @@ class TramPlayer(BasePlayer):
         pred_shape = tram_result["pred_shape"]
         pred_trans = tram_result["pred_trans"]
 
-        # smpl = SMPL()
+        # print(pred_rotmat.shape)
+        # print(pred_shape.shape)
+        # print(pred_trans.shape)
+        # print(type(pred_rotmat))
+        # print(type(pred_shape))
+        # print(type(pred_trans))
 
         pred = self.smpl_model(
             body_pose=pred_rotmat[:, 1:],
@@ -35,6 +40,8 @@ class TramPlayer(BasePlayer):
 
         vertices[:, :, 1] *= -1
         vertices[:, :, 2] *= -1
+
+        # print(vertices.shape)
 
         return vertices
 

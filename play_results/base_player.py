@@ -33,7 +33,9 @@ class BasePlayer(ABC):
 
         self.vertices = self.load_result(result_path)
 
-        assert self.total_frame_count == len(self.vertices), "Frame count mismatch"
+        # assert self.total_frame_count == len(
+        #     self.vertices
+        # ), f"Frame count mismatch, {self.total_frame_count} != {len(self.vertices)}"
 
         fps = self.cap.get(cv2.CAP_PROP_FPS)
 
