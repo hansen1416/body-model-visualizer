@@ -10,22 +10,22 @@ from base_player import BasePlayer
 from body_model_smplx import BodyModelSMPLX
 
 
-def make_smplx(**kwargs):
+# def make_smplx(**kwargs):
 
-    # SuperMotion is trained on BEDLAM dataset, the smplx config is the same except only 10 betas are used
-    bm_kwargs = {
-        "model_type": "smplx",
-        "gender": "neutral",
-        "num_pca_comps": 12,
-        "flat_hand_mean": False,
-    }
-    bm_kwargs.update(kwargs)
-    model = BodyModelSMPLX(
-        model_path="/home/hlz/repos/t2hm-dataset/inputs/checkpoints/body_models",
-        **bm_kwargs,
-    )
+#     # SuperMotion is trained on BEDLAM dataset, the smplx config is the same except only 10 betas are used
+#     bm_kwargs = {
+#         "model_type": "smplx",
+#         "gender": "neutral",
+#         "num_pca_comps": 12,
+#         "flat_hand_mean": False,
+#     }
+#     bm_kwargs.update(kwargs)
+#     model = BodyModelSMPLX(
+#         model_path="/home/hlz/repos/t2hm-dataset/inputs/checkpoints/body_models",
+#         **bm_kwargs,
+#     )
 
-    return model
+#     return model
 
 
 class GVHMRPlayer(BasePlayer):
@@ -38,12 +38,12 @@ class GVHMRPlayer(BasePlayer):
 
         # 'body_pose', 'betas', 'global_orient', 'transl'
 
-        print(results["body_pose"].shape)
-        print(results["betas"].shape)
-        print(results["global_orient"].shape)
-        print(results["transl"].shape)
+        # print(results["body_pose"].shape)
+        # print(results["betas"].shape)
+        # print(results["global_orient"].shape)
+        # print(results["transl"].shape)
 
-        pred = make_smplx()(**results)
+        # pred = make_smplx()(**results)
 
         # pred = self.smpl_model(
         #     body_pose=results["body_pose"],
@@ -54,12 +54,10 @@ class GVHMRPlayer(BasePlayer):
         #     default_smpl=True,
         # )
 
-        vertices = pred.vertices
+        # convert results frpm tensor to numpy
+        results = results.cpu().numpy()
 
-        # vertices[:, :, 1] *= -1
-        # vertices[:, :, 2] *= -1
-
-        return vertices
+        return results
 
 
 if __name__ == "__main__":
@@ -71,13 +69,26 @@ if __name__ == "__main__":
 
     for video_name in os.listdir(results_folder):
 
-        hmr_result = os.path.join(
-            results_folder,
-            video_name,
-            "hmr4d_results.pt",
+        joints_glob = torch.load(
+            os.path.join(
+                results_folder,
+                video_name,
+                "joints_glob.pt",
+            )
         )
 
-        data: dict = torch.load(hmr_result)
+        verts_glob = torch.load(
+            os.path.join(
+                results_folder,
+                video_name,
+                "verts_glob.pt",
+            )
+        )
+
+        # print(joints_glob.shape)
+        # print(verts_glob.shape)
+
+        # data: dict = torch.load(hmr_result)
         # print(data.keys())
         # dict_keys(['smpl_params_global', 'smpl_params_incam', 'K_fullimg', 'net_outputs'])
 
@@ -122,7 +133,7 @@ if __name__ == "__main__":
             continue
 
         # player = GVHMRPlayer(data["smpl_params_global"], video_path)
-        player = GVHMRPlayer(data["smpl_params_incam"], video_path)
+        player = GVHMRPlayer(verts_glob, video_path)
         player.play()
 
         break
