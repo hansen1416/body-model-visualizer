@@ -1,8 +1,6 @@
 import os
 import time
 
-# from abc import ABC, abstractmethod
-
 import cv2
 import numpy as np
 import open3d as o3d
@@ -39,6 +37,13 @@ class AnimPlayer:
         self._init_smpl()
 
     def _setup_lighting(self):
+        # Add indirect light from an environment map  # Open3D includes a default environment
+        self._scene.scene.scene.set_indirect_light("default")
+        self._scene.scene.scene.set_indirect_light_intensity(10000)
+
+        # Optional: rotate environment
+        self._scene.scene.scene.set_indirect_light_rotation(np.identity(3))
+
         # self._scene.scene.set_background([0.96, 0.94, 0.91, 1])
         self._scene.scene.set_background([0.46, 0.44, 0.41, 1])
 
