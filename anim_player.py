@@ -50,7 +50,7 @@ class AnimPlayer:
         self._scene.scene.scene.enable_sun_light(True)
 
     def _add_ground(self):
-        gp = get_checkerboard_plane(plane_width=2, num_boxes=9)
+        gp = get_checkerboard_plane(plane_width=10, num_boxes=10)
 
         for idx, g in enumerate(gp):
             g.compute_vertex_normals()
@@ -60,7 +60,7 @@ class AnimPlayer:
 
     def _set_camera(self):
         center = [0, 0, 0]  # center of the ground plane
-        eye = [0, 1.0, 2.0]  # slightly above and behind
+        eye = [0, 1.0, 4.0]  # slightly above and behind
         up = [0, 1, 0]
 
         bbox = o3d.geometry.AxisAlignedBoundingBox(
@@ -97,17 +97,6 @@ class AnimPlayer:
         self._scene.scene.add_geometry(
             "__body_model__", mesh, rendering.MaterialRecord()
         )
-
-    def load_smpl_mesh(self, verts, faces):
-
-        mesh = o3d.geometry.TriangleMesh()
-
-        mesh.vertices = o3d.utility.Vector3dVector(verts)
-        mesh.triangles = o3d.utility.Vector3iVector(faces)
-        mesh.compute_vertex_normals()
-        mesh.paint_uniform_color([0.5, 0.5, 0.5])
-
-        return mesh
 
     def run(self):
         gui.Application.instance.run()
