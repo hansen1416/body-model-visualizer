@@ -37,7 +37,8 @@ class AnimPlayer:
         self._set_camera()
 
     def _setup_lighting(self):
-        self._scene.scene.set_background([0.96, 0.94, 0.91, 1])  # white background
+        # self._scene.scene.set_background([0.96, 0.94, 0.91, 1])
+        self._scene.scene.set_background([0.46, 0.44, 0.41, 1])
 
         self._scene.scene.scene.set_sun_light(
             [-0.577, -0.577, -0.577],  # direction
