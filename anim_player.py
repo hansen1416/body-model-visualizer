@@ -1,5 +1,6 @@
 import os
 import time
+import threading
 
 import cv2
 import numpy as np
@@ -7,6 +8,7 @@ import open3d as o3d
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 from smplx import SMPL, SMPLX, MANO, FLAME
+import torch
 
 from utils.utils import (
     get_checkerboard_plane,
@@ -39,6 +41,17 @@ class AnimPlayer:
         self._init_smpl()
 
         self._add_ui()
+
+        self.step = 0
+
+        self.frame_idx = 0
+
+        self.total_frame_count = 0
+
+        self.verts_glob = None
+
+        # thread animation testing
+        threading.Thread(target=self.animate_mesh, daemon=True).start()
 
     def _setup_lighting(self):
 
@@ -93,20 +106,20 @@ class AnimPlayer:
         model_output = self.smpl_model()
         verts = model_output.vertices[0].detach().numpy()
 
-        mesh = o3d.geometry.TriangleMesh()
+        self.body_mesh = o3d.geometry.TriangleMesh()
 
-        mesh.vertices = o3d.utility.Vector3dVector(verts)
-        mesh.triangles = o3d.utility.Vector3iVector(faces)
-        mesh.compute_vertex_normals()
-        mesh.paint_uniform_color([0.5, 0.5, 0.5])
+        self.body_mesh.vertices = o3d.utility.Vector3dVector(verts)
+        self.body_mesh.triangles = o3d.utility.Vector3iVector(faces)
+        self.body_mesh.compute_vertex_normals()
+        self.body_mesh.paint_uniform_color([0.5, 0.5, 0.5])
 
-        min_y = -mesh.get_min_bound()[1]
-        mesh.translate([0, min_y, 0])
+        min_y = -self.body_mesh.get_min_bound()[1]
+        self.body_mesh.translate([0, min_y, 0])
 
-        material = rendering.MaterialRecord()
-        material.shader = "defaultLit"
+        self.material = rendering.MaterialRecord()
+        self.material.shader = "defaultLit"
 
-        self._scene.scene.add_geometry("__body_model__", mesh, material)
+        self._scene.scene.add_geometry("__body_model__", self.body_mesh, self.material)
 
     def _add_ui(self):
         em = self.window.theme.font_size
@@ -138,7 +151,135 @@ class AnimPlayer:
 
     def _on_run_button_click(self):
 
-        print(221)
+        results_folder = os.path.join(
+            os.path.expanduser("~"), "repos", "t2hm-dataset", "outputs", "demo"
+        )
+
+        # iterate over results folder
+        for video_name in os.listdir(results_folder):
+
+            joints_glob = torch.load(
+                os.path.join(
+                    results_folder,
+                    video_name,
+                    "joints_glob.pt",
+                )
+            )
+
+            verts_glob = torch.load(
+                os.path.join(
+                    results_folder,
+                    video_name,
+                    "verts_glob.pt",
+                )
+            )
+
+            joints_glob = joints_glob.cpu().numpy()
+            verts_glob = verts_glob.cpu().numpy()
+
+            # data: dict = torch.load(hmr_result)
+            # print(data.keys())
+            # dict_keys(['smpl_params_global', 'smpl_params_incam', 'K_fullimg', 'net_outputs'])
+
+            # print(data["smpl_params_global"].keys())
+            # dict_keys(['body_pose', 'betas', 'global_orient', 'transl'])
+
+            # for k, v in data["smpl_params_global"].items():
+            # print(f"{k}: {v.shape}")
+            # body_pose: torch.Size([336, 63])
+            # betas: torch.Size([336, 10])
+            # global_orient: torch.Size([336, 3])
+            # transl: torch.Size([336, 3])
+
+            # print(data["smpl_params_incam"].keys())
+            # dict_keys(['body_pose', 'betas', 'global_orient', 'transl'])
+
+            # for k, v in data["smpl_params_incam"].items():
+            #     print(f"{k}: {v.shape}")
+            # body_pose: torch.Size([336, 63])
+            # betas: torch.Size([336, 10])
+            # global_orient: torch.Size([336, 3])
+            # transl: torch.Size([336, 3])
+
+            # print(data["K_fullimg"].shape)
+            # torch.Size([336, 3, 3])
+
+            # print(data["net_outputs"].keys())
+            # dict_keys(['model_output', 'decode_dict', 'pred_smpl_params_incam', 'pred_smpl_params_global', 'static_conf_logits'])
+            # this the full output of the network, including both 'smpl_params_global' and 'smpl_params_incam'
+            # for more information, refer to hmr4d/model/gvhmr/gvhmr_pl_demo.py
+
+            video_path = os.path.join(
+                os.path.expanduser("~"),
+                "Downloads",
+                "videos",
+                f"{video_name}.mp4",
+            )
+
+            # check if video file exists
+            if not os.path.exists(video_path):
+                print(f"Video file does not exist: {video_path}")
+                continue
+
+            cap = cv2.VideoCapture(video_path)
+
+            if not cap.isOpened():
+                raise ValueError(f"Cannot open video file: {video_path}")
+
+            total_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+            fps = cap.get(cv2.CAP_PROP_FPS)
+
+            cap.release()
+
+            self.step = 1 / fps
+
+            self.frame_idx = 0
+
+            self.total_frame_count = total_frame_count
+
+            self.verts_glob = verts_glob
+
+            # while frame_idx < total_frame_count:
+
+            #     self.body_mesh.vertices = o3d.utility.Vector3dVector(
+            #         verts_glob[frame_idx]
+            #     )
+            #     self.body_mesh.compute_vertex_normals()
+
+            #     # rendering.Scene.update_geometry(
+            #     #     self._scene.scene.scene, "__body_model__", self.body_mesh
+            #     # )
+
+            #     frame_idx += 1
+
+            #     time.sleep(step)
+
+            break
+
+    def animate_mesh(self):
+
+        while True:
+
+            if self.verts_glob is not None:
+
+                while self.frame_idx < self.total_frame_count:
+
+                    self.body_mesh.vertices = o3d.utility.Vector3dVector(
+                        self.verts_glob[self.frame_idx]
+                    )
+
+                    def update_scene():
+                        self._scene.scene.remove_geometry("__body_model__")
+                        self._scene.scene.add_geometry(
+                            "__body_model__", self.body_mesh, self.material
+                        )
+
+                    gui.Application.instance.post_to_main_thread(
+                        self.window, update_scene
+                    )
+                    self.frame_idx += 1
+                    time.sleep(self.step)  # ~30 FPS
 
     def run(self):
         gui.Application.instance.run()
