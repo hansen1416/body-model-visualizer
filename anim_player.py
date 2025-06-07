@@ -36,6 +36,8 @@ class AnimPlayer:
         self._add_ground()
         self._set_camera()
 
+        self._init_smpl()
+
     def _setup_lighting(self):
         # self._scene.scene.set_background([0.96, 0.94, 0.91, 1])
         self._scene.scene.set_background([0.46, 0.44, 0.41, 1])
@@ -68,6 +70,33 @@ class AnimPlayer:
 
         # Move camera position manually
         self._scene.scene.camera.look_at(center, eye, up)
+
+    def _init_smpl(self):
+        self._scene.scene.remove_geometry("__body_model__")
+
+        # load smpl models
+        self.smpl_model = SMPL(
+            os.path.join("data", "body_models", "smpl", "SMPL_NEUTRAL.pkl")
+        )
+
+        faces = self.smpl_model.faces
+
+        model_output = self.smpl_model()
+        verts = model_output.vertices[0].detach().numpy()
+
+        mesh = o3d.geometry.TriangleMesh()
+
+        mesh.vertices = o3d.utility.Vector3dVector(verts)
+        mesh.triangles = o3d.utility.Vector3iVector(faces)
+        mesh.compute_vertex_normals()
+        mesh.paint_uniform_color([0.5, 0.5, 0.5])
+
+        min_y = -mesh.get_min_bound()[1]
+        mesh.translate([0, min_y, 0])
+
+        self._scene.scene.add_geometry(
+            "__body_model__", mesh, rendering.MaterialRecord()
+        )
 
     def load_smpl_mesh(self, verts, faces):
 
