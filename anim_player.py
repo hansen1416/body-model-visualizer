@@ -37,15 +37,15 @@ class AnimPlayer:
         self._init_smpl()
 
     def _setup_lighting(self):
-        # Add indirect light from an environment map  # Open3D includes a default environment
-        self._scene.scene.scene.set_indirect_light("default")
-        self._scene.scene.scene.set_indirect_light_intensity(10000)
-
-        # Optional: rotate environment
-        self._scene.scene.scene.set_indirect_light_rotation(np.identity(3))
 
         # self._scene.scene.set_background([0.96, 0.94, 0.91, 1])
         self._scene.scene.set_background([0.46, 0.44, 0.41, 1])
+        # self._scene.scene.show_skybox(True)
+        self._scene.scene.show_axes(True)
+
+        # # Add indirect light from an environment map  # Open3D includes a default environment
+        # self._scene.scene.scene.enable_indirect_light(True)
+        # self._scene.scene.scene.set_indirect_light_intensity(10000)
 
         self._scene.scene.scene.set_sun_light(
             [-0.577, -0.577, -0.577],  # direction
@@ -99,9 +99,10 @@ class AnimPlayer:
         min_y = -mesh.get_min_bound()[1]
         mesh.translate([0, min_y, 0])
 
-        self._scene.scene.add_geometry(
-            "__body_model__", mesh, rendering.MaterialRecord()
-        )
+        material = rendering.MaterialRecord()
+        material.shader = "defaultLit"
+
+        self._scene.scene.add_geometry("__body_model__", mesh, material)
 
     def run(self):
         gui.Application.instance.run()
