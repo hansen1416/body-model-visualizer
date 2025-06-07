@@ -30,11 +30,15 @@ class AnimPlayer:
         self._scene.scene = rendering.Open3DScene(self.window.renderer)
         self.window.add_child(self._scene)
 
+        self.window.set_on_layout(self._on_layout)
+
         self._setup_lighting()
         self._add_ground()
         self._set_camera()
 
         self._init_smpl()
+
+        self._add_ui()
 
     def _setup_lighting(self):
 
@@ -104,8 +108,43 @@ class AnimPlayer:
 
         self._scene.scene.add_geometry("__body_model__", mesh, material)
 
+    def _add_ui(self):
+        em = self.window.theme.font_size
+
+        self._settings_panel = gui.Vert(
+            0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em)
+        )
+
+        button = gui.Button("Run Function")
+        button.set_on_clicked(self._on_run_button_click)
+        self._settings_panel.add_child(button)
+
+        self.window.add_child(self._settings_panel)
+
+        # panel.frame = gui.Rect(10, 10, 1, 50)
+
+    def _on_layout(self, layout_context):
+
+        r = self.window.content_rect
+        self._scene.frame = r
+        width = 17 * layout_context.theme.font_size
+        height = min(
+            r.height,
+            self._settings_panel.calc_preferred_size(
+                layout_context, gui.Widget.Constraints()
+            ).height,
+        )
+        self._settings_panel.frame = gui.Rect(r.get_right() - width, r.y, width, height)
+
+    def _on_run_button_click(self):
+
+        print(221)
+
     def run(self):
         gui.Application.instance.run()
+
+    # def start_animation(self):
+    #     self.window.set_on_tick_event(lambda: print(time.time()))
 
 
 if __name__ == "__main__":
