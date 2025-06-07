@@ -7,6 +7,10 @@ import numpy as np
 import open3d as o3d
 from smplx import SMPL, SMPLX, MANO, FLAME
 
+from utils import (
+    get_checkerboard_plane,
+)
+
 
 class BasePlayer(ABC):
 
@@ -70,7 +74,12 @@ class BasePlayer(ABC):
 
         self.vis.add_geometry(mesh)
 
-        # image_geometry = None
+        # also need the graound
+        gp = get_checkerboard_plane(plane_width=2, num_boxes=9)
+
+        for _, g in enumerate(gp):
+            g.compute_vertex_normals()
+            self.vis.add_geometry(g)
 
         while frame_idx < self.total_frame_count:
 

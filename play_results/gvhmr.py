@@ -7,7 +7,7 @@ import smplx
 
 from base_player import BasePlayer
 
-from body_model_smplx import BodyModelSMPLX
+# from body_model_smplx import BodyModelSMPLX
 
 
 # def make_smplx(**kwargs):
@@ -26,6 +26,28 @@ from body_model_smplx import BodyModelSMPLX
 #     )
 
 #     return model
+
+
+def get_ground_params_from_points(root_points, vert_points):
+    """xz-plane is the ground plane
+    Args:
+        root_points: (L, 3), to decide center
+        vert_points: (L, V, 3), to decide scale
+    """
+    # root_max = root_points.max(0)[0]  # (3,)
+    # root_min = root_points.min(0)[0]  # (3,)
+    root_max = np.max(root_points, axis=0)  # shape: (24, 3)
+    root_min = np.min(root_points, axis=0)  # shape: (24, 3)
+
+    cx, _, cz = (root_max + root_min) / 2.0
+
+    # vert_max = vert_points.reshape(-1, 3).max(0)[0]  # (L, 3)
+    # vert_min = vert_points.reshape(-1, 3).min(0)[0]  # (L, 3)
+    vert_max = vert_points.reshape(-1, 3).max(axis=0)  # (3,)
+    vert_min = vert_points.reshape(-1, 3).min(axis=0)  # (3,)
+
+    scale = (vert_max - vert_min)[[0, 2]].max()
+    return float(scale), float(cx), float(cz)
 
 
 class GVHMRPlayer(BasePlayer):
@@ -54,9 +76,6 @@ class GVHMRPlayer(BasePlayer):
         #     default_smpl=True,
         # )
 
-        # convert results frpm tensor to numpy
-        results = results.cpu().numpy()
-
         return results
 
 
@@ -84,6 +103,16 @@ if __name__ == "__main__":
                 "verts_glob.pt",
             )
         )
+
+        joints_glob = joints_glob.cpu().numpy()
+        verts_glob = verts_glob.cpu().numpy()
+
+        print(joints_glob.shape)
+        print(verts_glob.shape)
+
+        scale, cx, cz = get_ground_params_from_points(joints_glob[:, 0], verts_glob)
+
+        print(f"Scale: {scale}, Center: ({cx}, {cz})")
 
         # print(joints_glob.shape)
         # print(verts_glob.shape)
