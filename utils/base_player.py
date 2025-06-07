@@ -7,7 +7,7 @@ import numpy as np
 import open3d as o3d
 from smplx import SMPL, SMPLX, MANO, FLAME
 
-from utils import (
+from utils.utils import (
     get_checkerboard_plane,
 )
 

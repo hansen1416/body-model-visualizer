@@ -41,7 +41,7 @@ import scipy.spatial.transform.rotation as R
 import open3d.visualization.rendering as rendering
 
 
-from utils import (
+from utils.utils import (
     get_checkerboard_plane,
     smpl_joint_names,
     smplx_body_joint_names,
@@ -58,7 +58,7 @@ from utils import (
 from simple_ik import simple_ik_solver
 
 
-isMacOS = (platform.system() == "Darwin")
+isMacOS = platform.system() == "Darwin"
 
 
 class Settings:
@@ -136,7 +136,7 @@ class Settings:
             "reflectance": 0.5,
             "clearcoat": 0.2,
             "clearcoat_roughness": 0.2,
-            "anisotropy": 0.0
+            "anisotropy": 0.0,
         },
         "Metal (rougher)": {
             "metallic": 1.0,
@@ -144,7 +144,7 @@ class Settings:
             "reflectance": 0.9,
             "clearcoat": 0.0,
             "clearcoat_roughness": 0.0,
-            "anisotropy": 0.0
+            "anisotropy": 0.0,
         },
         "Metal (smoother)": {
             "metallic": 1.0,
@@ -152,7 +152,7 @@ class Settings:
             "reflectance": 0.9,
             "clearcoat": 0.0,
             "clearcoat_roughness": 0.0,
-            "anisotropy": 0.0
+            "anisotropy": 0.0,
         },
         "Plastic": {
             "metallic": 0.0,
@@ -160,7 +160,7 @@ class Settings:
             "reflectance": 0.5,
             "clearcoat": 0.5,
             "clearcoat_roughness": 0.2,
-            "anisotropy": 0.0
+            "anisotropy": 0.0,
         },
         "Glazed ceramic": {
             "metallic": 0.0,
@@ -168,7 +168,7 @@ class Settings:
             "reflectance": 0.9,
             "clearcoat": 1.0,
             "clearcoat_roughness": 0.1,
-            "anisotropy": 0.0
+            "anisotropy": 0.0,
         },
         "Clay": {
             "metallic": 0.0,
@@ -176,7 +176,7 @@ class Settings:
             "reflectance": 0.5,
             "clearcoat": 0.1,
             "clearcoat_roughness": 0.287,
-            "anisotropy": 0.0
+            "anisotropy": 0.0,
         },
     }
 
@@ -199,7 +199,7 @@ class Settings:
             Settings.LIT: rendering.MaterialRecord(),
             Settings.UNLIT: rendering.MaterialRecord(),
             Settings.NORMALS: rendering.MaterialRecord(),
-            Settings.DEPTH: rendering.MaterialRecord()
+            Settings.DEPTH: rendering.MaterialRecord(),
         }
         self._materials[Settings.LIT].base_color = [0.9, 0.9, 0.9, 1.0]
         self._materials[Settings.LIT].shader = Settings.LIT
@@ -218,7 +218,7 @@ class Settings:
         self.apply_material = True
 
     def apply_material_prefab(self, name):
-        assert (self.material.shader == Settings.LIT)
+        assert self.material.shader == Settings.LIT
         prefab = Settings.PREFAB[name]
         for key, val in prefab.items():
             setattr(self.material, "base_" + key, val)
@@ -240,86 +240,84 @@ class AppWindow:
     DEFAULT_IBL = "default"
 
     MATERIAL_NAMES = ["Lit", "Unlit", "Normals", "Depth"]
-    MATERIAL_SHADERS = [
-        Settings.LIT, Settings.UNLIT, Settings.NORMALS, Settings.DEPTH
-    ]
+    MATERIAL_SHADERS = [Settings.LIT, Settings.UNLIT, Settings.NORMALS, Settings.DEPTH]
 
     BODY_MODEL_NAMES = ["SMPL", "SMPLX", "MANO", "FLAME"]
     BODY_MODEL_GENDERS = {
-        'SMPL': ['neutral', 'male', 'female'],
-        'SMPLX': ['neutral', 'male', 'female'],
-        'MANO': ['neutral'],
-        'FLAME': ['neutral', 'male', 'female']
+        "SMPL": ["neutral", "male", "female"],
+        "SMPLX": ["neutral", "male", "female"],
+        "MANO": ["neutral"],
+        "FLAME": ["neutral", "male", "female"],
     }
     BODY_MODEL_N_BETAS = {
-        'SMPL': 10,
-        'SMPLX': 10,
-        'MANO': 10,
-        'FLAME': 10,
+        "SMPL": 10,
+        "SMPLX": 10,
+        "MANO": 10,
+        "FLAME": 10,
     }
     CAM_FIRST = True
 
     PRELOADED_BODY_MODELS = {}
 
     POSE_PARAMS = {
-        'SMPL': {
-            'body_pose': torch.zeros(1, 23, 3),
-            'global_orient': torch.zeros(1, 1, 3),
+        "SMPL": {
+            "body_pose": torch.zeros(1, 23, 3),
+            "global_orient": torch.zeros(1, 1, 3),
         },
-        'SMPLX': {
-            'body_pose': torch.zeros(1, 21, 3),
-            'global_orient': torch.zeros(1, 1, 3),
-            'left_hand_pose': torch.zeros(1, 15, 3),
-            'right_hand_pose': torch.zeros(1, 15, 3),
-            'jaw_pose': torch.zeros(1, 1, 3),
-            'leye_pose': torch.zeros(1, 1, 3),
-            'reye_pose': torch.zeros(1, 1, 3),
+        "SMPLX": {
+            "body_pose": torch.zeros(1, 21, 3),
+            "global_orient": torch.zeros(1, 1, 3),
+            "left_hand_pose": torch.zeros(1, 15, 3),
+            "right_hand_pose": torch.zeros(1, 15, 3),
+            "jaw_pose": torch.zeros(1, 1, 3),
+            "leye_pose": torch.zeros(1, 1, 3),
+            "reye_pose": torch.zeros(1, 1, 3),
         },
-        'MANO': {
-            'hand_pose': torch.zeros(1, 15, 3),
-            'global_orient': torch.zeros(1, 1, 3),
+        "MANO": {
+            "hand_pose": torch.zeros(1, 15, 3),
+            "global_orient": torch.zeros(1, 1, 3),
         },
-        'FLAME': {
-            'global_orient': torch.zeros(1, 1, 3),
-            'jaw_pose': torch.zeros(1, 1, 3),
-            'neck_pose': torch.zeros(1, 1, 3),
-            'leye_pose': torch.zeros(1, 1, 3),
-            'reye_pose': torch.zeros(1, 1, 3),
+        "FLAME": {
+            "global_orient": torch.zeros(1, 1, 3),
+            "jaw_pose": torch.zeros(1, 1, 3),
+            "neck_pose": torch.zeros(1, 1, 3),
+            "leye_pose": torch.zeros(1, 1, 3),
+            "reye_pose": torch.zeros(1, 1, 3),
         },
     }
 
     JOINT_NAMES = {
-        'SMPL': {
-            'global_orient': ['root'],
-            'body_pose': smpl_joint_names,
+        "SMPL": {
+            "global_orient": ["root"],
+            "body_pose": smpl_joint_names,
         },
-        'SMPLX': {
-            'global_orient': ['root'],
-            'body_pose': smplx_body_joint_names,
-            'left_hand_pose': hand_joint_names,
-            'right_hand_pose': hand_joint_names,
-            'jaw_pose': ['jaw'],
-            'leye_pose': ['leye'],
-            'reye_pose': ['reye'],
+        "SMPLX": {
+            "global_orient": ["root"],
+            "body_pose": smplx_body_joint_names,
+            "left_hand_pose": hand_joint_names,
+            "right_hand_pose": hand_joint_names,
+            "jaw_pose": ["jaw"],
+            "leye_pose": ["leye"],
+            "reye_pose": ["reye"],
         },
-        'MANO': {
-            'global_orient': ['root'],
-            'hand_pose': hand_joint_names,
+        "MANO": {
+            "global_orient": ["root"],
+            "hand_pose": hand_joint_names,
         },
-        'FLAME': {
-            'global_orient': ['root'],
-            'jaw_pose': ['jaw'],
-            'neck_pose': ['neck'],
-            'leye_pose': ['leye'],
-            'reye_pose': ['reye'],
+        "FLAME": {
+            "global_orient": ["root"],
+            "jaw_pose": ["jaw"],
+            "neck_pose": ["neck"],
+            "leye_pose": ["leye"],
+            "reye_pose": ["reye"],
         },
     }
 
     KEYPOINT_NAMES = {
-        'SMPL': SMPL_NAMES,
-        'SMPLX': SMPLX_NAMES,
-        'MANO': MANO_NAMES,
-        'FLAME': FLAME_KEYPOINT_NAMES,
+        "SMPL": SMPL_NAMES,
+        "SMPLX": SMPLX_NAMES,
+        "MANO": MANO_NAMES,
+        "FLAME": FLAME_KEYPOINT_NAMES,
     }
 
     JOINTS = None
@@ -331,8 +329,7 @@ class AppWindow:
         resource_path = gui.Application.instance.resource_path
         self.settings.new_ibl_name = resource_path + "/" + AppWindow.DEFAULT_IBL
 
-        self.window = gui.Application.instance.create_window(
-            "Open3D", width, height)
+        self.window = gui.Application.instance.create_window("Open3D", width, height)
         w = self.window  # to make the code more concise
 
         # 3D widget
@@ -359,14 +356,16 @@ class AppWindow:
         # the spacing of the left, top, right, bottom margins. (This acts like
         # the 'padding' property in CSS.)
         self._settings_panel = gui.Vert(
-            0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))
+            0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em)
+        )
 
         # Create a collapsable vertical widget, which takes up enough vertical
         # space for all its children when open, but only enough for text when
         # closed. This is useful for property pages, so the user can hide sets
         # of properties they rarely use.
-        view_ctrls = gui.CollapsableVert("View controls", 0.25 * em,
-                                         gui.Margins(em, 0, 0, 0))
+        view_ctrls = gui.CollapsableVert(
+            "View controls", 0.25 * em, gui.Margins(em, 0, 0, 0)
+        )
 
         view_ctrls.set_is_open(False)
         self._arcball_button = gui.Button("Arcball")
@@ -448,8 +447,7 @@ class AppWindow:
         self._settings_panel.add_fixed(separation_height)
         self._settings_panel.add_child(view_ctrls)
 
-        advanced = gui.CollapsableVert("Advanced lighting", 0,
-                                       gui.Margins(em, 0, 0, 0))
+        advanced = gui.CollapsableVert("Advanced lighting", 0, gui.Margins(em, 0, 0, 0))
         advanced.set_is_open(False)
 
         self._use_ibl = gui.Checkbox("HDR map")
@@ -463,8 +461,7 @@ class AppWindow:
         advanced.add_child(h)
 
         self._ibl_map = gui.Combobox()
-        for ibl in glob.glob(gui.Application.instance.resource_path +
-                             "/*_ibl.ktx"):
+        for ibl in glob.glob(gui.Application.instance.resource_path + "/*_ibl.ktx"):
 
             self._ibl_map.add_item(os.path.basename(ibl[:-8]))
         self._ibl_map.selected_text = AppWindow.DEFAULT_IBL
@@ -502,8 +499,9 @@ class AppWindow:
         self._settings_panel.add_fixed(separation_height)
         self._settings_panel.add_child(advanced)
 
-        material_settings = gui.CollapsableVert("Material settings", 0,
-                                                gui.Margins(em, 0, 0, 0))
+        material_settings = gui.CollapsableVert(
+            "Material settings", 0, gui.Margins(em, 0, 0, 0)
+        )
         material_settings.set_is_open(False)
 
         self._shader = gui.Combobox()
@@ -541,9 +539,12 @@ class AppWindow:
         # ------- BODY MODEL SETTINGS ------- #
         # ----------------------------------- #
         self.preload_body_models()
-        self._scene.scene.show_ground_plane(self.settings.show_ground, rendering.Scene.GroundPlane(0))
-        self.model_settings = gui.CollapsableVert("Model settings", 0,
-                                                  gui.Margins(em, 0, 0, 0))
+        self._scene.scene.show_ground_plane(
+            self.settings.show_ground, rendering.Scene.GroundPlane(0)
+        )
+        self.model_settings = gui.CollapsableVert(
+            "Model settings", 0, gui.Margins(em, 0, 0, 0)
+        )
         self.model_settings.set_is_open(True)
 
         self._body_model = gui.Combobox()
@@ -557,7 +558,7 @@ class AppWindow:
         # ------- BODY MODEL BETAS SETTINGS ------- #
         self._body_model_shape_comp = gui.Combobox()
         for i in range(AppWindow.BODY_MODEL_N_BETAS[AppWindow.BODY_MODEL_NAMES[0]]):
-            self._body_model_shape_comp.add_item(f'{i+1:02d}')
+            self._body_model_shape_comp.add_item(f"{i+1:02d}")
 
         self._body_beta_val = gui.Slider(gui.Slider.DOUBLE)
         self._body_beta_val.set_limits(-5.0, 5.0)
@@ -565,12 +566,14 @@ class AppWindow:
         self._body_beta_reset = gui.Button("Reset betas")
 
         self._body_beta_text = gui.Label("Betas")
-        self._body_beta_text.text = f",".join(f'{x:.1f}'for x in self._body_beta_tensor[0].numpy().tolist())
+        self._body_beta_text.text = f",".join(
+            f"{x:.1f}" for x in self._body_beta_tensor[0].numpy().tolist()
+        )
 
         # ------- BODY MODEL EXPRESSION SETTINGS ------- #
         self._body_model_exp_comp = gui.Combobox()
         for i in range(10):
-            self._body_model_exp_comp.add_item(f'{i + 1:02d}')
+            self._body_model_exp_comp.add_item(f"{i + 1:02d}")
 
         self._body_exp_val = gui.Slider(gui.Slider.DOUBLE)
         self._body_exp_val.set_limits(-5.0, 5.0)
@@ -578,8 +581,9 @@ class AppWindow:
         self._body_exp_reset = gui.Button("Reset expression")
 
         self._body_exp_text = gui.Label("Expression")
-        self._body_exp_text.text = f",".join(f'{x:.1f}' for x in self._body_exp_tensor[0].numpy().tolist())
-
+        self._body_exp_text.text = f",".join(
+            f"{x:.1f}" for x in self._body_exp_tensor[0].numpy().tolist()
+        )
 
         # ------- BODY MODEL POSE SETTINGS ------- #
         self._body_pose_comp = gui.Combobox()
@@ -611,7 +615,9 @@ class AppWindow:
 
         self._body_beta_val.set_on_value_changed(self._on_body_beta_val)
         self._body_beta_reset.set_on_clicked(self._on_body_beta_reset)
-        self._body_model_shape_comp.set_on_selection_changed(self._on_body_model_shape_comp)
+        self._body_model_shape_comp.set_on_selection_changed(
+            self._on_body_model_shape_comp
+        )
 
         self._body_exp_val.set_on_value_changed(self._on_body_exp_val)
         self._body_exp_reset.set_on_clicked(self._on_body_exp_reset)
@@ -702,7 +708,7 @@ class AppWindow:
         self.info = gui.Label("")
         self.info.visible = False
 
-        self.joint_label_3d = gui.Label3D("", [0,0,0])
+        self.joint_label_3d = gui.Label3D("", [0, 0, 0])
         self.joint_labels_3d_list = []
         # self.joint_label_3d.visible = False
         # ----
@@ -737,8 +743,9 @@ class AppWindow:
                 file_menu.add_separator()
                 file_menu.add_item("Quit", AppWindow.MENU_QUIT)
             settings_menu = gui.Menu()
-            settings_menu.add_item("Model - Lighting - Materials",
-                                   AppWindow.MENU_SHOW_SETTINGS)
+            settings_menu.add_item(
+                "Model - Lighting - Materials", AppWindow.MENU_SHOW_SETTINGS
+            )
             settings_menu.set_checked(AppWindow.MENU_SHOW_SETTINGS, True)
             help_menu = gui.Menu()
             help_menu.add_item("About", AppWindow.MENU_ABOUT)
@@ -764,13 +771,12 @@ class AppWindow:
         # window, so that the window can call the appropriate function when the
         # menu item is activated.
         w.set_on_menu_item_activated(AppWindow.MENU_OPEN, self._on_menu_open)
-        w.set_on_menu_item_activated(AppWindow.MENU_EXPORT,
-                                     self._on_menu_export)
-        w.set_on_menu_item_activated(AppWindow.MENU_SAVE,
-                                     self._on_save_dialog)
+        w.set_on_menu_item_activated(AppWindow.MENU_EXPORT, self._on_menu_export)
+        w.set_on_menu_item_activated(AppWindow.MENU_SAVE, self._on_save_dialog)
         w.set_on_menu_item_activated(AppWindow.MENU_QUIT, self._on_menu_quit)
-        w.set_on_menu_item_activated(AppWindow.MENU_SHOW_SETTINGS,
-                                     self._on_menu_toggle_settings_panel)
+        w.set_on_menu_item_activated(
+            AppWindow.MENU_SHOW_SETTINGS, self._on_menu_toggle_settings_panel
+        )
         w.set_on_menu_item_activated(AppWindow.MENU_ABOUT, self._on_menu_about)
         # ----
 
@@ -778,27 +784,31 @@ class AppWindow:
 
     def _apply_settings(self):
         bg_color = [
-            self.settings.bg_color.red, self.settings.bg_color.green,
-            self.settings.bg_color.blue, self.settings.bg_color.alpha
+            self.settings.bg_color.red,
+            self.settings.bg_color.green,
+            self.settings.bg_color.blue,
+            self.settings.bg_color.alpha,
         ]
         self._scene.scene.set_background(bg_color)
         self._scene.scene.show_skybox(self.settings.show_skybox)
         self._scene.scene.show_axes(self.settings.show_axes)
         if self.settings.new_ibl_name is not None:
-            self._scene.scene.scene.set_indirect_light(
-                self.settings.new_ibl_name)
+            self._scene.scene.scene.set_indirect_light(self.settings.new_ibl_name)
             # Clear new_ibl_name, so we don't keep reloading this image every
             # time the settings are applied.
             self.settings.new_ibl_name = None
         self._scene.scene.scene.enable_indirect_light(self.settings.use_ibl)
         self._scene.scene.scene.set_indirect_light_intensity(
-            self.settings.ibl_intensity)
+            self.settings.ibl_intensity
+        )
         sun_color = [
-            self.settings.sun_color.red, self.settings.sun_color.green,
-            self.settings.sun_color.blue
+            self.settings.sun_color.red,
+            self.settings.sun_color.green,
+            self.settings.sun_color.blue,
         ]
-        self._scene.scene.scene.set_sun_light(self.settings.sun_dir, sun_color,
-                                              self.settings.sun_intensity)
+        self._scene.scene.scene.set_sun_light(
+            self.settings.sun_dir, sun_color, self.settings.sun_intensity
+        )
         self._scene.scene.scene.enable_sun_light(self.settings.use_sun)
 
         if self.settings.apply_material:
@@ -815,12 +825,13 @@ class AppWindow:
         self._sun_intensity.int_value = self.settings.sun_intensity
         self._sun_dir.vector_value = self.settings.sun_dir
         self._sun_color.color_value = self.settings.sun_color
-        self._material_prefab.enabled = (
-            self.settings.material.shader == Settings.LIT)
-        c = gui.Color(self.settings.material.base_color[0],
-                      self.settings.material.base_color[1],
-                      self.settings.material.base_color[2],
-                      self.settings.material.base_color[3])
+        self._material_prefab.enabled = self.settings.material.shader == Settings.LIT
+        c = gui.Color(
+            self.settings.material.base_color[0],
+            self.settings.material.base_color[1],
+            self.settings.material.base_color[2],
+            self.settings.material.base_color[3],
+        )
         self._material_color.color_value = c
         self._point_size.double_value = self.settings.material.point_size
 
@@ -834,15 +845,15 @@ class AppWindow:
         height = min(
             r.height,
             self._settings_panel.calc_preferred_size(
-                layout_context, gui.Widget.Constraints()).height)
-        self._settings_panel.frame = gui.Rect(r.get_right() - width, r.y, width,
-                                              height)
+                layout_context, gui.Widget.Constraints()
+            ).height,
+        )
+        self._settings_panel.frame = gui.Rect(r.get_right() - width, r.y, width, height)
 
-        pref = self.info.calc_preferred_size(layout_context,
-                                             gui.Widget.Constraints())
-        self.info.frame = gui.Rect(r.x,
-                                   r.get_bottom() - pref.height, pref.width,
-                                   pref.height)
+        pref = self.info.calc_preferred_size(layout_context, gui.Widget.Constraints())
+        self.info.frame = gui.Rect(
+            r.x, r.get_bottom() - pref.height, pref.width, pref.height
+        )
 
     def _set_mouse_mode_rotate(self):
         self._scene.set_view_controls(gui.SceneWidget.Controls.ROTATE_CAMERA)
@@ -893,7 +904,9 @@ class AppWindow:
                     )
             except Exception as e:
                 print(e)
-                import ipdb; ipdb.set_trace()
+                import ipdb
+
+                ipdb.set_trace()
         else:
             if hasattr(self, "joint_labels_3d_list"):
                 for label3d in self.joint_labels_3d_list:
@@ -925,7 +938,10 @@ class AppWindow:
             # logger.info('drawing joints')
             for i in range(joints.shape[0]):
                 radius = body_radius
-                if joint_names[i] in LEFT_HAND_KEYPOINT_NAMES + RIGHT_HAND_KEYPOINT_NAMES:
+                if (
+                    joint_names[i]
+                    in LEFT_HAND_KEYPOINT_NAMES + RIGHT_HAND_KEYPOINT_NAMES
+                ):
                     radius = hand_radius
                 elif joint_names[i] in HEAD_KEYPOINT_NAMES:
                     radius = head_radius
@@ -939,7 +955,9 @@ class AppWindow:
                 # else:
                 #     sg.paint_uniform_color(red)
                 sg.translate(joints[i])
-                if (AppWindow.SELECTED_JOINT is not None) and (i == AppWindow.SELECTED_JOINT):
+                if (AppWindow.SELECTED_JOINT is not None) and (
+                    i == AppWindow.SELECTED_JOINT
+                ):
                     self._scene.scene.add_geometry(f"__joints_{i}__", sg, mat_selected)
                 else:
                     self._scene.scene.add_geometry(f"__joints_{i}__", sg, mat)
@@ -1013,15 +1031,19 @@ class AppWindow:
 
         self._body_pose_joint.clear_items()
         joint_names = AppWindow.JOINT_NAMES[name][self._body_pose_comp.selected_text]
-        for i in range(AppWindow.POSE_PARAMS[name][self._body_pose_comp.selected_text].shape[1]):
-            self._body_pose_joint.add_item(f'{i}-{joint_names[i]}')
+        for i in range(
+            AppWindow.POSE_PARAMS[name][self._body_pose_comp.selected_text].shape[1]
+        ):
+            self._body_pose_joint.add_item(f"{i}-{joint_names[i]}")
 
         self._reset_rot_sliders()
         AppWindow.SELECTED_JOINT = None
         self._on_show_joints(self._show_joints.checked)
 
     def _on_body_model_gender(self, name, index):
-        logger.info(f"Changing {self._body_model.selected_text} body model gender to {name}-{index}")
+        logger.info(
+            f"Changing {self._body_model.selected_text} body model gender to {name}-{index}"
+        )
         self._body_beta_val.double_value = 0.0
         self.load_body_model(self._body_model.selected_text, gender=name)
         self._reset_rot_sliders()
@@ -1029,8 +1051,12 @@ class AppWindow:
         # self._apply_settings()
 
     def _on_body_beta_val(self, val):
-        self._body_beta_tensor[0, int(self._body_model_shape_comp.selected_text)-1] = float(val)
-        self._body_beta_text.text = f",".join(f'{x:.1f}' for x in self._body_beta_tensor[0].numpy().tolist())
+        self._body_beta_tensor[
+            0, int(self._body_model_shape_comp.selected_text) - 1
+        ] = float(val)
+        self._body_beta_text.text = f",".join(
+            f"{x:.1f}" for x in self._body_beta_tensor[0].numpy().tolist()
+        )
         self.load_body_model(
             self._body_model.selected_text,
             gender=self._body_model_gender.selected_text,
@@ -1038,8 +1064,12 @@ class AppWindow:
         # self._on_show_joints(self._show_joints.checked)
 
     def _on_body_exp_val(self, val):
-        self._body_exp_tensor[0, int(self._body_model_exp_comp.selected_text)-1] = float(val)
-        self._body_exp_text.text = f",".join(f'{x:.1f}' for x in self._body_exp_tensor[0].numpy().tolist())
+        self._body_exp_tensor[0, int(self._body_model_exp_comp.selected_text) - 1] = (
+            float(val)
+        )
+        self._body_exp_text.text = f",".join(
+            f"{x:.1f}" for x in self._body_exp_tensor[0].numpy().tolist()
+        )
         self.load_body_model(
             self._body_model.selected_text,
             gender=self._body_model_gender.selected_text,
@@ -1052,9 +1082,13 @@ class AppWindow:
     def _on_body_pose_joint_x(self, val):
         bm = self._body_model.selected_text
         bp = self._body_pose_comp.selected_text
-        ji = int(self._body_pose_joint.selected_text.split('-')[0])
-        euler_angle = [val, self._body_pose_joint_y.int_value, self._body_pose_joint_z.int_value]
-        axis_angle = R.Rotation.from_euler('xyz', euler_angle, degrees=True).as_rotvec()
+        ji = int(self._body_pose_joint.selected_text.split("-")[0])
+        euler_angle = [
+            val,
+            self._body_pose_joint_y.int_value,
+            self._body_pose_joint_z.int_value,
+        ]
+        axis_angle = R.Rotation.from_euler("xyz", euler_angle, degrees=True).as_rotvec()
         AppWindow.POSE_PARAMS[bm][bp][0, ji] = torch.from_numpy(axis_angle)
 
         self.load_body_model(
@@ -1066,9 +1100,13 @@ class AppWindow:
     def _on_body_pose_joint_y(self, val):
         bm = self._body_model.selected_text
         bp = self._body_pose_comp.selected_text
-        ji = int(self._body_pose_joint.selected_text.split('-')[0])
-        euler_angle = [self._body_pose_joint_x.int_value, val, self._body_pose_joint_z.int_value]
-        axis_angle = R.Rotation.from_euler('xyz', euler_angle, degrees=True).as_rotvec()
+        ji = int(self._body_pose_joint.selected_text.split("-")[0])
+        euler_angle = [
+            self._body_pose_joint_x.int_value,
+            val,
+            self._body_pose_joint_z.int_value,
+        ]
+        axis_angle = R.Rotation.from_euler("xyz", euler_angle, degrees=True).as_rotvec()
         AppWindow.POSE_PARAMS[bm][bp][0, ji] = torch.from_numpy(axis_angle)
 
         self.load_body_model(
@@ -1080,9 +1118,13 @@ class AppWindow:
     def _on_body_pose_joint_z(self, val):
         bm = self._body_model.selected_text
         bp = self._body_pose_comp.selected_text
-        ji = int(self._body_pose_joint.selected_text.split('-')[0])
-        euler_angle = [self._body_pose_joint_x.int_value, self._body_pose_joint_y.int_value, val]
-        axis_angle = R.Rotation.from_euler('xyz', euler_angle, degrees=True).as_rotvec()
+        ji = int(self._body_pose_joint.selected_text.split("-")[0])
+        euler_angle = [
+            self._body_pose_joint_x.int_value,
+            self._body_pose_joint_y.int_value,
+            val,
+        ]
+        axis_angle = R.Rotation.from_euler("xyz", euler_angle, degrees=True).as_rotvec()
         AppWindow.POSE_PARAMS[bm][bp][0, ji] = torch.from_numpy(axis_angle)
 
         self.load_body_model(
@@ -1100,13 +1142,17 @@ class AppWindow:
     def _on_body_pose_comp(self, name, index):
         self._body_pose_joint.clear_items()
         joint_names = AppWindow.JOINT_NAMES[self._body_model.selected_text][name]
-        for i in range(AppWindow.POSE_PARAMS[self._body_model.selected_text][name].shape[1]):
-            self._body_pose_joint.add_item(f'{i}-{joint_names[i]}')
+        for i in range(
+            AppWindow.POSE_PARAMS[self._body_model.selected_text][name].shape[1]
+        ):
+            self._body_pose_joint.add_item(f"{i}-{joint_names[i]}")
         self._reset_rot_sliders()
 
     def _on_body_beta_reset(self):
         self._body_beta_tensor = torch.zeros(1, 10)
-        self._body_beta_text.text = f",".join(f'{x:.1f}' for x in self._body_beta_tensor[0].numpy().tolist())
+        self._body_beta_text.text = f",".join(
+            f"{x:.1f}" for x in self._body_beta_tensor[0].numpy().tolist()
+        )
         self._body_beta_val.double_value = 0.0
         self.load_body_model(
             self._body_model.selected_text,
@@ -1115,7 +1161,9 @@ class AppWindow:
 
     def _on_body_exp_reset(self):
         self._body_exp_tensor = torch.zeros(1, 10)
-        self._body_exp_text.text = f",".join(f'{x:.1f}' for x in self._body_exp_tensor[0].numpy().tolist())
+        self._body_exp_text.text = f",".join(
+            f"{x:.1f}" for x in self._body_exp_tensor[0].numpy().tolist()
+        )
         self._body_exp_val.double_value = 0.0
         self.load_body_model(
             self._body_model.selected_text,
@@ -1136,23 +1184,27 @@ class AppWindow:
         key = gui.KeyName(event.key.real).name
         step = 0.01
         # logger.debug(f"key {key} is pressed")
-        if (self._show_joints.checked) and \
-                (AppWindow.SELECTED_JOINT is not None) and \
-                (key in ('ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX')):
-            if key == 'ONE':
+        if (
+            (self._show_joints.checked)
+            and (AppWindow.SELECTED_JOINT is not None)
+            and (key in ("ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX"))
+        ):
+            if key == "ONE":
                 transl = np.array([-step, 0.0, 0.0])
-            elif key == 'TWO':
+            elif key == "TWO":
                 transl = np.array([step, 0.0, 0.0])
-            elif key == 'THREE':
+            elif key == "THREE":
                 transl = np.array([0.0, -step, 0.0])
-            elif key == 'FOUR':
+            elif key == "FOUR":
                 transl = np.array([0.0, step, 0.0])
-            elif key == 'FIVE':
+            elif key == "FIVE":
                 transl = np.array([0.0, 0.0, -step])
-            elif key == 'SIX':
+            elif key == "SIX":
                 transl = np.array([0.0, 0.0, step])
 
-            AppWindow.JOINTS[AppWindow.SELECTED_JOINT] = AppWindow.JOINTS[AppWindow.SELECTED_JOINT] + transl
+            AppWindow.JOINTS[AppWindow.SELECTED_JOINT] = (
+                AppWindow.JOINTS[AppWindow.SELECTED_JOINT] + transl
+            )
             self._on_show_joints(show=True)
             return gui.Widget.EventCallbackResult.HANDLED
         return gui.Widget.EventCallbackResult.IGNORED
@@ -1173,10 +1225,13 @@ class AppWindow:
         #     self.joint_label_3d.text = label_text
         #     self.joint_label_3d.position = label_pos
         #     logger.debug(label_text, label_pos)
-            # self._scene.add_3d_label(label_pos, label_text)
+        # self._scene.add_3d_label(label_pos, label_text)
 
-        if event.type == gui.MouseEvent.Type.BUTTON_DOWN and event.is_modifier_down(
-                gui.KeyModifier.CTRL) and self._show_joints.checked:
+        if (
+            event.type == gui.MouseEvent.Type.BUTTON_DOWN
+            and event.is_modifier_down(gui.KeyModifier.CTRL)
+            and self._show_joints.checked
+        ):
             # x = event.x - self._scene.frame.x
             # y = event.y - self._scene.frame.y
             # logger.debug(f'Clicked point x: {x}, y: {y}')
@@ -1187,8 +1242,8 @@ class AppWindow:
                 # relative to the origin of the widget. Note that even if the
                 # scene widget is the only thing in the window, if a menubar
                 # exists it also takes up space in the window (except on macOS).
-                x = event.x # - self._scene.frame.x
-                y = event.y # - self._scene.frame.y
+                x = event.x  # - self._scene.frame.x
+                y = event.y  # - self._scene.frame.y
                 # logger.debug(f'Clicked point x: {x}, y: {y}')
                 # Note that np.asarray() reverses the axes.
                 depth = np.asarray(depth_image)[y, x]
@@ -1202,8 +1257,12 @@ class AppWindow:
                     #     event.x, event.y, depth, self._scene.frame.width,
                     #     self._scene.frame.height)
                     world = self._scene.scene.camera.unproject(
-                        x, (self._scene.frame.height - y), depth, self._scene.frame.width,
-                        self._scene.frame.height)
+                        x,
+                        (self._scene.frame.height - y),
+                        depth,
+                        self._scene.frame.width,
+                        self._scene.frame.height,
+                    )
 
                     # logger.debug(f'cam pose {self._scene.scene.camera.get_model_matrix()[:3, 3].tolist()}')
                     # logger.debug(world)
@@ -1214,16 +1273,25 @@ class AppWindow:
                     # logger.debug(f'Clicked {text}')
 
                     # find the closest joint to the clicked pos
-                    dist = ((AppWindow.JOINTS - np.array([world[0], world[1], world[2]]))**2).sum(1)
+                    dist = (
+                        (AppWindow.JOINTS - np.array([world[0], world[1], world[2]]))
+                        ** 2
+                    ).sum(1)
                     AppWindow.SELECTED_JOINT = np.argmin(dist)
                     # logger.debug(AppWindow.SELECTED_JOINT)
                     # import ipdb; ipdb.set_trace()
-                    jn = AppWindow.KEYPOINT_NAMES[self._body_model.selected_text][AppWindow.SELECTED_JOINT]
-                    self._update_label(f'{self._body_model.selected_text} joint "{jn}" selected')
+                    jn = AppWindow.KEYPOINT_NAMES[self._body_model.selected_text][
+                        AppWindow.SELECTED_JOINT
+                    ]
+                    self._update_label(
+                        f'{self._body_model.selected_text} joint "{jn}" selected'
+                    )
                     self._scene.remove_3d_label(self.joint_label_3d)
                     self.joint_label_3d = self._scene.add_3d_label(
                         AppWindow.JOINTS[AppWindow.SELECTED_JOINT],
-                        AppWindow.KEYPOINT_NAMES[self._body_model.selected_text][AppWindow.SELECTED_JOINT]
+                        AppWindow.KEYPOINT_NAMES[self._body_model.selected_text][
+                            AppWindow.SELECTED_JOINT
+                        ],
                     )
                     # self.joint_label_3d.text = jn
                     # self.joint_label_3d.position = AppWindow.JOINTS[AppWindow.SELECTED_JOINT]
@@ -1248,7 +1316,7 @@ class AppWindow:
 
     def _update_label(self, text):
         self.info.text = text
-        self.info.visible = (text != "")
+        self.info.visible = text != ""
         # We are sizing the info label to be exactly the right size,
         # so since the text likely changed width, we need to
         # re-layout to set the new frame.
@@ -1258,8 +1326,8 @@ class AppWindow:
         bm = self._body_model.selected_text
         bp = self._body_pose_comp.selected_text
 
-        if not ((bm in ['SMPL', 'SMPLX']) and (bp in ('body_pose'))):
-            logger.warning('IK is not implemented for this body model')
+        if not ((bm in ["SMPL", "SMPLX"]) and (bp in ("body_pose"))):
+            logger.warning("IK is not implemented for this body model")
             return 0
 
         gender = self._body_model_gender.selected_text
@@ -1268,9 +1336,12 @@ class AppWindow:
         target_keypoints = AppWindow.JOINTS[:22][None]
         target_keypoints = torch.from_numpy(target_keypoints).float()
         opt_params = simple_ik_solver(
-            model=AppWindow.PRELOADED_BODY_MODELS[f'{bm.lower()}-{gender.lower()}'],
-            target=target_keypoints, init=init_pose, device='cpu',
-            max_iter=50, transl=AppWindow.BODY_TRANSL,
+            model=AppWindow.PRELOADED_BODY_MODELS[f"{bm.lower()}-{gender.lower()}"],
+            target=target_keypoints,
+            init=init_pose,
+            device="cpu",
+            max_iter=50,
+            transl=AppWindow.BODY_TRANSL,
             betas=self._body_beta_tensor,
         )
         opt_params = opt_params.requires_grad_(False)
@@ -1294,7 +1365,10 @@ class AppWindow:
 
     def _on_material_color(self, color):
         self.settings.material.base_color = [
-            color.red, color.green, color.blue, color.alpha
+            color.red,
+            color.green,
+            color.blue,
+            color.alpha,
         ]
         self.settings.apply_material = True
         self._apply_settings()
@@ -1305,16 +1379,17 @@ class AppWindow:
         self._apply_settings()
 
     def _on_menu_open(self):
-        dlg = gui.FileDialog(gui.FileDialog.OPEN, "Choose file to load",
-                             self.window.theme)
+        dlg = gui.FileDialog(
+            gui.FileDialog.OPEN, "Choose file to load", self.window.theme
+        )
         dlg.add_filter(
             ".ply .stl .fbx .obj .off .gltf .glb",
-            "Triangle mesh files (.ply, .stl, .fbx, .obj, .off, "
-            ".gltf, .glb)")
+            "Triangle mesh files (.ply, .stl, .fbx, .obj, .off, " ".gltf, .glb)",
+        )
         dlg.add_filter(
             ".xyz .xyzn .xyzrgb .ply .pcd .pts",
-            "Point cloud files (.xyz, .xyzn, .xyzrgb, .ply, "
-            ".pcd, .pts)")
+            "Point cloud files (.xyz, .xyzn, .xyzrgb, .ply, " ".pcd, .pts)",
+        )
         dlg.add_filter(".ply", "Polygon files (.ply)")
         dlg.add_filter(".stl", "Stereolithography files (.stl)")
         dlg.add_filter(".fbx", "Autodesk Filmbox files (.fbx)")
@@ -1324,8 +1399,7 @@ class AppWindow:
         dlg.add_filter(".glb", "OpenGL binary transfer files (.glb)")
         dlg.add_filter(".xyz", "ASCII point cloud files (.xyz)")
         dlg.add_filter(".xyzn", "ASCII point cloud with normals (.xyzn)")
-        dlg.add_filter(".xyzrgb",
-                       "ASCII point cloud files with colors (.xyzrgb)")
+        dlg.add_filter(".xyzrgb", "ASCII point cloud files with colors (.xyzrgb)")
         dlg.add_filter(".pcd", "Point Cloud Data files (.pcd)")
         dlg.add_filter(".pts", "3D Points files (.pts)")
         dlg.add_filter("", "All files")
@@ -1336,8 +1410,9 @@ class AppWindow:
         self.window.show_dialog(dlg)
 
     def _on_save_dialog(self):
-        dlg = gui.FileDialog(gui.FileDialog.SAVE, "Choose file to save",
-                             self.window.theme)
+        dlg = gui.FileDialog(
+            gui.FileDialog.SAVE, "Choose file to save", self.window.theme
+        )
         dlg.set_on_cancel(self._on_save_dialog_cancel)
         dlg.set_on_done(self._on_save_dialog_done)
         self.window.show_dialog(dlg)
@@ -1348,14 +1423,14 @@ class AppWindow:
     def _on_save_dialog_done(self, filename):
         self.window.close_dialog()
         output_dict = {
-            'betas': self._body_beta_tensor,
-            'expression': self._body_exp_tensor,
-            'gender': self._body_model_gender.selected_text,
-            'body_model': self._body_model.selected_text,
-            'joints': AppWindow.JOINTS,
+            "betas": self._body_beta_tensor,
+            "expression": self._body_exp_tensor,
+            "gender": self._body_model_gender.selected_text,
+            "body_model": self._body_model.selected_text,
+            "joints": AppWindow.JOINTS,
         }
         output_dict.update(AppWindow.POSE_PARAMS[self._body_model.selected_text])
-        logger.debug(f'Saving output to {filename}')
+        logger.debug(f"Saving output to {filename}")
         joblib.dump(output_dict, filename)
 
     def _on_file_dialog_cancel(self):
@@ -1366,8 +1441,9 @@ class AppWindow:
         self.load(filename)
 
     def _on_menu_export(self):
-        dlg = gui.FileDialog(gui.FileDialog.SAVE, "Choose file to save",
-                             self.window.theme)
+        dlg = gui.FileDialog(
+            gui.FileDialog.SAVE, "Choose file to save", self.window.theme
+        )
         dlg.add_filter(".png", "PNG files (.png)")
         dlg.set_on_cancel(self._on_file_dialog_cancel)
         dlg.set_on_done(self._on_export_dialog_done)
@@ -1384,7 +1460,8 @@ class AppWindow:
     def _on_menu_toggle_settings_panel(self):
         self._settings_panel.visible = not self._settings_panel.visible
         gui.Application.instance.menubar.set_checked(
-            AppWindow.MENU_SHOW_SETTINGS, self._settings_panel.visible)
+            AppWindow.MENU_SHOW_SETTINGS, self._settings_panel.visible
+        )
 
     def _on_menu_about(self):
         # Show a simple dialog. Although the Dialog is actually a widget, you can
@@ -1423,33 +1500,41 @@ class AppWindow:
         self.window.close_dialog()
 
     def add_ground_plane(self):
-        logger.info('drawing ground plane')
+        logger.info("drawing ground plane")
         gp = get_checkerboard_plane(plane_width=2, num_boxes=9)
 
         for idx, g in enumerate(gp):
             g.compute_vertex_normals()
-            self._scene.scene.add_geometry(f"__ground_{idx:04d}__", g, self.settings._materials[Settings.LIT])
+            self._scene.scene.add_geometry(
+                f"__ground_{idx:04d}__", g, self.settings._materials[Settings.LIT]
+            )
 
     def preload_body_models(self):
         from smplx import SMPL, SMPLX, MANO, FLAME
 
         for body_model in AppWindow.BODY_MODEL_NAMES:
             for gender in AppWindow.BODY_MODEL_GENDERS[body_model]:
-                logger.info(f'Loading {body_model}-{gender}')
-                extra_params = {'gender': gender}
-                if body_model in ('SMPLX', 'MANO', 'FLAME'):
-                    extra_params['use_pca'] = False
-                    extra_params['flat_hand_mean'] = True
-                    extra_params['use_face_contour'] = True
-                model = eval(body_model.upper())(f'data/body_models/{body_model.lower()}', **extra_params)
-                AppWindow.PRELOADED_BODY_MODELS[f'{body_model.lower()}-{gender.lower()}'] = model
-        logger.info(f'Loaded body models {AppWindow.PRELOADED_BODY_MODELS.keys()}')
+                logger.info(f"Loading {body_model}-{gender}")
+                extra_params = {"gender": gender}
+                if body_model in ("SMPLX", "MANO", "FLAME"):
+                    extra_params["use_pca"] = False
+                    extra_params["flat_hand_mean"] = True
+                    extra_params["use_face_contour"] = True
+                model = eval(body_model.upper())(
+                    f"data/body_models/{body_model.lower()}", **extra_params
+                )
+                AppWindow.PRELOADED_BODY_MODELS[
+                    f"{body_model.lower()}-{gender.lower()}"
+                ] = model
+        logger.info(f"Loaded body models {AppWindow.PRELOADED_BODY_MODELS.keys()}")
 
     # @torch.no_grad()
-    def load_body_model(self, body_model='smpl', gender='neutral'):
+    def load_body_model(self, body_model="smpl", gender="neutral"):
         self._scene.scene.remove_geometry("__body_model__")
 
-        model = AppWindow.PRELOADED_BODY_MODELS[f'{body_model.lower()}-{gender.lower()}']
+        model = AppWindow.PRELOADED_BODY_MODELS[
+            f"{body_model.lower()}-{gender.lower()}"
+        ]
 
         input_params = copy.deepcopy(AppWindow.POSE_PARAMS[body_model])
 
@@ -1476,8 +1561,7 @@ class AppWindow:
         mesh.translate([0, min_y, 0])
         AppWindow.JOINTS += np.array([0, min_y, 0])
 
-        self._scene.scene.add_geometry("__body_model__", mesh,
-                                       self.settings.material)
+        self._scene.scene.add_geometry("__body_model__", mesh, self.settings.material)
         bounds = mesh.get_axis_aligned_bounding_box()
         if AppWindow.CAM_FIRST:
             self._scene.setup_camera(60, bounds, bounds.get_center())
@@ -1498,8 +1582,7 @@ class AppWindow:
             mesh = o3d.io.read_triangle_mesh(path)
         if mesh is not None:
             if len(mesh.triangles) == 0:
-                print(
-                    "[WARNING] Contains 0 triangles, will read as point cloud")
+                print("[WARNING] Contains 0 triangles, will read as point cloud")
                 mesh = None
             else:
                 mesh.compute_vertex_normals()
@@ -1530,8 +1613,9 @@ class AppWindow:
 
         if geometry is not None:
             try:
-                self._scene.scene.add_geometry("__model__", geometry,
-                                               self.settings.material)
+                self._scene.scene.add_geometry(
+                    "__model__", geometry, self.settings.material
+                )
                 bounds = geometry.get_axis_aligned_bounding_box()
                 self._scene.setup_camera(60, bounds, bounds.get_center())
             except Exception as e:
@@ -1552,7 +1636,7 @@ class AppWindow:
 
 def main(args):
     if args.web:
-        logger.info('Initializing web visualization')
+        logger.info("Initializing web visualization")
         o3d.visualization.webrtc_server.enable_webrtc()
 
     # We need to initalize the application, which finds the necessary shaders
@@ -1567,7 +1651,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--web', action='store_true', help='Enable web visualization')
+    parser.add_argument("--web", action="store_true", help="Enable web visualization")
 
     args = parser.parse_args()
     main(args)

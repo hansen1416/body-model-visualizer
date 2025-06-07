@@ -3,7 +3,7 @@ import os
 import numpy as np
 from smplx import SMPL
 
-from base_player import BasePlayer
+from utils.base_player import BasePlayer
 
 
 class TramPlayer(BasePlayer):

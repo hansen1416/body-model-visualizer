@@ -3,7 +3,7 @@ import os
 import joblib
 import numpy as np
 
-from base_player import BasePlayer
+from utils.base_player import BasePlayer
 
 
 class WHAMPlayer(BasePlayer):

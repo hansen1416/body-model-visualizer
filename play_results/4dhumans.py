@@ -11,7 +11,7 @@ from smplx.lbs import vertices2joints
 from smplx.utils import SMPLOutput
 
 
-from base_player import BasePlayer
+from utils.base_player import BasePlayer
 
 # Suppress all warnings
 warnings.filterwarnings("ignore")

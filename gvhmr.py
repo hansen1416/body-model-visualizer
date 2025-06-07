@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import smplx
 
-from base_player import BasePlayer
+from utils.base_player import BasePlayer
 
 # from body_model_smplx import BodyModelSMPLX
 
