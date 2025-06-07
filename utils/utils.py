@@ -542,7 +542,7 @@ def get_checkerboard_plane(plane_width=20, num_boxes=15, center=True):
                     plane_width / 2
                 )
             # trans = trimesh.transformations.scale_and_translate(scale=1, translate=[c[0], c[1], 0])
-            ground.translate([c[0], 0, c[1] - 1])
+            ground.translate([c[0], 0, c[1]])
             # ground.apply_transform(trimesh.transformations.rotation_matrix(np.rad2deg(-120), direction=[1,0,0]))
             ground.paint_uniform_color(black if ((i + j) % 2) == 0 else white)
             meshes.append(ground)
